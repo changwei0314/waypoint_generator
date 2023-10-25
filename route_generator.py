@@ -155,7 +155,7 @@ def new_find_path(start, end, white_cnt):
 
         parent_path = cache.get()
         candidates = []
-        print(parent_path)
+        # print(parent_path)
 
         for white in white_cnt:
 
@@ -177,7 +177,7 @@ def new_find_path(start, end, white_cnt):
             path = parent_path.copy()
             path.append(white)
 
-            if dis < 7 and next_dis2end < 2:  # town 4: 5
+            if dis < 7 and next_dis2end < 5:  # town 4: 5
                 print("Get!!!")
                 final_path.append(path)
                 cache = queue.Queue()
@@ -288,7 +288,7 @@ def rdp_algorithm(draw_img, final_path):
     width = 36
 
     rdp_img = draw_img.copy()
-    shortened_route = rdp(final_path, epsilon=0.75)
+    shortened_route = rdp(final_path, epsilon=0.5)  # 0.75
 
     all_segments = []
 
@@ -336,7 +336,7 @@ def rdp_algorithm(draw_img, final_path):
 
 
 ########## main ##########
-town = 4
+town = 1
 # 1, 4
 
 if town == 4:
@@ -375,5 +375,5 @@ draw_img = draw_waypoint(img, start, end, final_path)
 print("Executing RDP algorithm to get route segment...")
 rdp_img, _ = rdp_algorithm(draw_img, final_path)
 
-# cv2.imwrite(f"Town{town}_waypoint.png", draw_img)
-cv2.imwrite(f"Town{town}_route_result.png", rdp_img)
+# cv2.imwrite(f"Town{town}_route_result.png", rdp_img)
+cv2.imwrite(f"Town{town}_route_{start}_{end}.png", rdp_img)
