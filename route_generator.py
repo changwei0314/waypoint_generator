@@ -146,6 +146,18 @@ def find_path(start, end, white_cnt):
 
 def new_find_path(start, end, white_cnt):
 
+    white_copy = np.array(white_cnt)
+    min_x = end[0] if start[0] > end[0] else start[0]
+    max_x = start[0] if start[0] > end[0] else end[0]
+    min_y = end[1] if start[1] > end[1] else start[1]
+    max_y = start[1] if start[1] > end[1] else end[1]
+
+    mask = (white_copy[:, 0] > min_x-3) & (white_copy[:, 1] > min_y -
+                                           3) & (white_copy[:, 0] < max_x+3) & (white_copy[:, 1] < max_y+3)
+    filter_white = white_copy[mask]
+
+    # print(filter_white)
+
     cache = queue.Queue()
     cache.put([start])
 
@@ -157,17 +169,17 @@ def new_find_path(start, end, white_cnt):
         candidates = []
         # print(parent_path)
 
-        for white in white_cnt:
+        for white in filter_white:  # white_cnt
 
-            last_point = parent_path[-1]
-
-            new_x = last_point[0] - white[0]
-            new_y = last_point[1] - white[1]
-            dis = (new_x**2 + new_y**2)**0.5
-
+            white = tuple(white)
             # if white point have existed in the path
             if white in parent_path:
                 continue
+
+            last_point = parent_path[-1]
+            new_x = last_point[0] - white[0]
+            new_y = last_point[1] - white[1]
+            dis = (new_x**2 + new_y**2)**0.5
 
             curr_dis2end = ((last_point[0] - end[0])
                             ** 2 + (last_point[1] - end[1])**2)**0.5
@@ -177,7 +189,7 @@ def new_find_path(start, end, white_cnt):
             path = parent_path.copy()
             path.append(white)
 
-            if dis < 7 and next_dis2end < 5:  # town 4: 5
+            if dis < 7 and next_dis2end < 7:  # town 4: 5
                 print("Get!!!")
                 final_path.append(path)
                 cache = queue.Queue()
@@ -187,31 +199,6 @@ def new_find_path(start, end, white_cnt):
             if dis < 7 and next_dis2end < curr_dis2end:
                 candidates.append(path)
                 # cache.put(new_path)
-
-        # select one path from all candidate paths, then add to the cache
-        # print("="*20)
-        # for p in candidates:
-        #     print(p)
-        # print("="*20)
-
-        # if len(candidates) > 0:
-        #     win_path = candidates[0].copy()
-        #     for p in candidates[1:]:
-        #         tp = p[-1]
-        #         cur_s2tp = ((tp[0] - start[0])**2 + (tp[1] - start[1])**2)**0.5
-        #         cur_tp2e = ((tp[0] - end[0])**2 + (tp[1] - end[1])**2)**0.5
-        #         cur_total = cur_s2tp + cur_tp2e
-
-        #         tp2 = win_path[-1]
-        #         pre_s2tp = ((tp2[0] - start[0])**2 +
-        #                     (tp2[1] - start[1])**2)**0.5
-        #         pre_tp2e = ((tp2[0] - end[0])**2 + (tp2[1] - end[1])**2)**0.5
-        #         pre_total = pre_s2tp + pre_tp2e
-
-        #         if cur_total < pre_total:
-        #             win_path = p
-
-        #     cache.put(win_path)
 
         if len(parent_path) == 1:
             cache.put(candidates[0])
@@ -261,8 +248,8 @@ def new_find_path(start, end, white_cnt):
 
                 cache.put(win_path)
 
-    for i, p in enumerate(final_path):
-        print(p)
+    # for i, p in enumerate(final_path):
+    #     print(p)
 
     return final_path[0]
 
@@ -288,7 +275,7 @@ def rdp_algorithm(draw_img, final_path):
     width = 36
 
     rdp_img = draw_img.copy()
-    shortened_route = rdp(final_path, epsilon=0.5)  # 0.75
+    shortened_route = rdp(final_path, epsilon=0.9)  # 0.75
 
     all_segments = []
 
@@ -352,8 +339,9 @@ elif town == 1:
     start = [3653, 2559][::-1]
     end = [3948, 2187][::-1]
 
-    start = (2559, 3653)
-    end = (2187, 3948)
+    start = (2447, 536)
+    end = (3871, 1346)
+
 
 new_img = img.copy()
 new_img[start[0]][start[1]] = np.array([0, 0, 255])
@@ -363,6 +351,8 @@ cv2.circle(new_img, start, radius=5, color=(255, 0, 0), thickness=3)
 cv2.circle(new_img, end, radius=5, color=(255, 0, 0), thickness=3)
 
 
+print("Start point:", start)
+print("End point:", end)
 print("Finding Path...")
 # final_path = find_path(start, end, all_whites_pos)
 final_path = new_find_path(start, end, all_whites_pos)
