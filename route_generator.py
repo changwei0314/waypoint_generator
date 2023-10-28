@@ -6,46 +6,6 @@ import numpy as np
 from rdp import rdp
 
 
-########## Check if AB degree less than BC degree ##########
-
-def calculate_if_degree_is_smaller(A, B, C, white):
-
-    # Define vectors A, B, and C as lists of their components
-    # A: start to last point in the path
-    # B: start to end point
-    # C: start to mid
-
-    # Calculate the dot products of A and B, and C and B
-    dot_product_AB = sum([A[i] * B[i] for i in range(len(A))])
-    dot_product_CB = sum([C[i] * B[i] for i in range(len(C))])
-
-    # Calculate the magnitudes (lengths) of vectors A, B, and C
-    magnitude_A = math.sqrt(sum([A[i] ** 2 for i in range(len(A))]))
-    magnitude_B = math.sqrt(sum([B[i] ** 2 for i in range(len(B))]))
-    magnitude_C = math.sqrt(sum([C[i] ** 2 for i in range(len(C))]))
-
-    # Calculate the cosines of the angles between A and B, and C and B
-    if (magnitude_A * magnitude_B) == 0 or (magnitude_C * magnitude_B) == 0:
-        print(white)
-
-    cos_theta_AB = dot_product_AB / (magnitude_A * magnitude_B)
-    cos_theta_CB = dot_product_CB / (magnitude_C * magnitude_B)
-
-    # Calculate the angles in radians
-    theta_radians_AB = math.acos(cos_theta_AB)
-    theta_radians_CB = math.acos(cos_theta_CB)
-
-    # Convert the angles to degrees
-    theta_degrees_AB = math.degrees(theta_radians_AB)
-    theta_degrees_CB = math.degrees(theta_radians_CB)
-
-    # Compare the angles
-    if theta_degrees_AB >= theta_degrees_CB:
-        return True
-    else:
-        return False
-
-
 ########## Count all white points (all centerline in map) ##########
 
 
@@ -154,12 +114,37 @@ def new_find_path(start, end, white_cnt):
 
     mask = (white_copy[:, 0] > min_x-3) & (white_copy[:, 1] > min_y -
                                            3) & (white_copy[:, 0] < max_x+3) & (white_copy[:, 1] < max_y+3)
-    filter_white = white_copy[mask]
+
+    if max_x - min_x > 1000 or max_y - min_y > 1000:
+        filter_white = white_copy.copy()
+    else:
+        filter_white = white_copy[mask]
 
     # print(filter_white)
 
+    ############################# First iteration #############################
     cache = queue.Queue()
-    cache.put([start])
+
+    min_idx = -1
+    idx = 0
+    cur_dis = 1000000
+    for white in white_cnt:
+        delta_x = start[0] - white[0]
+        delta_y = start[1] - white[1]
+        dis = (delta_x**2 + delta_y**2)**0.5
+
+        if dis < cur_dis:
+            min_idx = idx
+            cur_dis = dis
+
+        idx += 1
+
+    first_point = white_cnt[min_idx]
+    cache.put([first_point])
+
+    # cache.put([start])
+
+    ###########################################################################
 
     final_path = []
 
@@ -167,6 +152,11 @@ def new_find_path(start, end, white_cnt):
 
         parent_path = cache.get()
         candidates = []
+
+        if len(parent_path) > 50:
+            final_path.append(parent_path)
+            break
+
         # print(parent_path)
 
         for white in filter_white:  # white_cnt
@@ -198,7 +188,6 @@ def new_find_path(start, end, white_cnt):
 
             if dis < 7 and next_dis2end < curr_dis2end:
                 candidates.append(path)
-                # cache.put(new_path)
 
         if len(parent_path) == 1:
             cache.put(candidates[0])
@@ -339,8 +328,8 @@ elif town == 1:
     start = [3653, 2559][::-1]
     end = [3948, 2187][::-1]
 
-    start = (2447, 536)
-    end = (3871, 1346)
+    start = (2656, 4562)
+    end = (551, 4051)
 
 
 new_img = img.copy()
